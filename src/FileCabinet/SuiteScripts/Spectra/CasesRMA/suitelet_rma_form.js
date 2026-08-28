@@ -504,7 +504,7 @@ define(['N/search', 'N/email', 'N/file', 'N/log', 'N/record', 'N/runtime', 'N/ui
         }
 
       }
-      return numtrans;
+      return `Thank you for submitting your Return Material Authorization (RMA) request. We have received your request, and our team will review it.<br><br>Please allow us up to 24 hours to review your request. If additional information is needed, we will contact you with the next steps.<br><br>Please do not ship any items back until you receive further instructions or an approved RMA number from our team. Sending products before receiving an approved RMA may result in delays and could increase the risk of your package being misplaced or lost during the return process.<br><br>If you have any questions in the meantime, please feel free to contact our Customer Service team at ra@spectrababyusa.com.<br><br>Thank you for your patience and cooperation.`;
     }
 
     function sendRMAEmail(numtrans, caseNumberText) {
