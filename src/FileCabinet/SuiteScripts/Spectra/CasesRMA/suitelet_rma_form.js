@@ -2,8 +2,8 @@
  *@NApiVersion 2.1
  *@NScriptType Suitelet
  */
-define(['N/search', 'N/email', 'N/file', 'N/log', 'N/record', 'N/runtime', 'N/ui/serverWidget', 'N/https', 'N/format'],
-  function (search, email, file, log, record, runtime, serverWidget, https, format) {
+define(['N/search', 'N/email', 'N/file', 'N/log', 'N/record', 'N/runtime', 'N/ui/serverWidget', 'N/https', 'N/format', 'N/query'],
+  function (search, email, file, log, record, runtime, serverWidget, https, format, query) {
 
     function onRequest(context) {
       const indexId = "./content/index.html";
@@ -449,6 +449,20 @@ define(['N/search', 'N/email', 'N/file', 'N/log', 'N/record', 'N/runtime', 'N/ui
             fieldId: 'customform',
             value: 130 // Case RMA Form
           });
+          const lastCaseNumber = getLastCaseNumber();
+          if (lastCaseNumber) {
+            caseRecord.setValue({
+              fieldId: 'autoname',
+              value: false
+            });
+            const numericPart = lastCaseNumber.replace('TICKET', '');
+            const nextNumber = parseInt(numericPart, 10) + 1;
+            const caseNumber = `TICKET${nextNumber}`;
+            caseRecord.setValue({
+              fieldId: 'casenumber',
+              value: caseNumber
+            });
+          }
           caseRecord.setValue({
             fieldId: 'company',
             value: customerId
@@ -507,12 +521,26 @@ define(['N/search', 'N/email', 'N/file', 'N/log', 'N/record', 'N/runtime', 'N/ui
       return `Thank you for submitting your Return Material Authorization (RMA) request. We have received your request, and our team will review it.<br><br>Please allow us up to 24 hours to review your request. If additional information is needed, we will contact you with the next steps.<br><br>Please do not ship any items back until you receive further instructions or an approved RMA number from our team. Sending products before receiving an approved RMA may result in delays and could increase the risk of your package being misplaced or lost during the return process.<br><br>If you have any questions in the meantime, please feel free to contact our Customer Service team at ra@spectrababyusa.com.<br><br>Thank you for your patience and cooperation.`;
     }
 
+    function getLastCaseNumber() {
+      try {
+        const sql = "SELECT id, caseNumber FROM supportCase WHERE caseNumber LIKE 'TICKET%' ORDER BY dateCreated DESC FETCH FIRST 1 ROWS ONLY";
+
+        const resultSet = query.runSuiteQL({ query: sql });
+        const results = resultSet.asMappedResults();
+        log.debug('getLastCaseNumber results', JSON.stringify(results));
+        return results.length > 0 ? results[0].casenumber : null;
+      } catch (e) {
+        log.error('getLastCaseNumber error', e);
+      }
+    }
+
     function sendRMAEmail(numtrans, caseNumberText) {
       try {
         const bodyAll = "New RMA Ticket created " + numtrans;
         const subject = `New Ticket Created: ${caseNumberText}`;
         email.send({
-          author: 6116833, // RA Department prod
+          // author: 6116833, // RA Department prod
+          author: 5129159, // RA Department SB
           recipients: "ra@spectrababyusa.com",
           subject: subject,
           body: bodyAll,
